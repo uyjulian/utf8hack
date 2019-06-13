@@ -1,117 +1,117 @@
-TITLE: �g���g��2��UTF8�ǂݍ��݋@�\��ǉ���������v���O�C��
+TITLE: 吉里吉里2にUTF8読み込み機能を追加する実験プラグイン
 AUTHOR: miahmie
 
-������͂ȂɁH
+●これはなに？
 
-�g���g���Q�͕W���ł�UTF-8�̃e�L�X�g�ǂݍ��݂ɑΉ����Ă��炸�C
-�ꕔ�v���O�C���ilineParser/csvParser�j�Ȃǂ��g���ăX�N���v�g���ŏ�������
-UTF-8�̃e�L�X�g��ǂݍ��ޑΉ������Ă��܂����B
+吉里吉里２は標準ではUTF-8のテキスト読み込みに対応しておらず，
+一部プラグイン（lineParser/csvParser）などを使ってスクリプト側で処理して
+UTF-8のテキストを読み込む対応をしていました。
 
-���̃v���O�C�����g�p����� Array.load ���̋g���g���̕W����
-�e�L�X�g�ǂݍ��ݏ����ɂ��Ă�UTF-8�e�L�X�g�̓ǂݍ��݂ɑΉ����܂��B
+このプラグインを使用すると Array.load 等の吉里吉里の標準の
+テキスト読み込み処理についてもUTF-8テキストの読み込みに対応します。
 
-�������e�L�X�g�ǂݍ��݂̍����ւ��͋g���g���̃v���O�C���C���^�[�t�F�[�X�ł�
-�񋟂���Ă��炸�C�������{�̂Ƀp�b�`�𓖂Ă邱�Ƃŏ�����u��������Ƃ���
-�Ή��ɂȂ��Ă��܂��B
+ただしテキスト読み込みの差し替えは吉里吉里のプラグインインターフェースでは
+提供されておらず，無理やり本体にパッチを当てることで処理を置き換えるという
+対応になっています。
 
-���Ȃ킿�C�g���g���Q�̃o�[�W������g�p����Ă���R���p�C���ˑ��ɂȂ邽�߁C
-���̃v���O�C�����K�������g�p�ł���^���삷��Ƃ͌���܂���B
+すなわち，吉里吉里２のバージョンや使用されているコンパイラ依存になるため，
+このプラグインが必ずしも使用できる／動作するとは限りません。
 
-��ɋg���g���y�ւ̈ڍs��C�Q�i�J���p�j�Ƃy�i�����[�X�p�j�̕��p��
-������e�L�X�g�G���R�[�h��������������Ƃ������g�p��z�肵�Ă��܂��B
+主に吉里吉里Ｚへの移行や，２（開発用）とＺ（リリース用）の併用に
+おけるテキストエンコード問題を回避したいといった使用を想定しています。
 
-�����̃v���O�C�����g�p���ăQ�[���������[�X����̂͂����߂��܂���B
-
-
-���g����
-
-k2utf8hack.dll �����̃v���O�C���{�̂ł��B
-�g���qtpm�Ƀ��l�[�����ċg���g���Q�̋N���O�Ƀ����N�����邩�C
-startup.tjs�Ȃǂł��̃v���O�C���������N���Ă��������B
-�i���̏ꍇ�C�����N�O�̃e�L�X�g�ǂݍ��݂͏]���ʂ�̋����ɂȂ�܂��j
-
-�EScripts.textEncoding �v���p�e�B���ǉ�����܂����C
-�@�g���g��Z�Ǝ኱�d�l���قȂ�܂��F
-
-�@Z: Scripts.{eval|exec}Storage �̕����R�[�h�ɉe�����󂯂�
-�@����: ��L�ȊO�ɂ� Array.load �̕����R�[�h���e�����󂯂�
-
-�@���v���p�e�B�̒l�ɂ��Ă� ���L -readencoding �̎w��Ɠ��l�ł��B
-�@�@�w��O�̒l��ݒ肷��� ANSI �����̓���ɂȂ�܂��B
-�@�@�g���g��Z�ł͔͈͊O�̒l�œǂݍ��ނƖ��T�|�[�g��O����������d�l���ɒ��ӁB
-
-�E�R�}���h���C��/cf/cfu�̋N���I�v�V���� -readencoding �ɑΉ����܂��F
-�i�l���Q�Ƃ����̂͂��̃v���O�C���������N���ꂽ���̃^�C�~���O�ł��j
-�@UTF-8, Shift_JIS, ANSI, auto �̎w��ɑΉ����܂��B
-
-�@Shift_JIS�͋g���g��Z�ƈႢ�Ccodepage 932 �w��ŕ����R�[�h��ϊ����܂��B
-�@ANSI �� CP_ACP ��OS�̌���ݒ�Ɉˑ���������ɂȂ�܂��B����͋g���g��Z��
-�@�@Shift_JIS ���w�肵�����̓���Ɠ������̂ɂȂ�܂��B
-�@Shift_JIS/ANSI�̎w��ł����Ă�BOM��UTF8�ł���Γǂݍ��ނ��Ƃ��ł��܂��B
-�@auto �͂��̃v���O�C���Ǝ��̋@�\�ŁCUTF-8/Shift_JIS�������Ŕ��肵��
-�@�@�R�[�h�ϊ��������s���܂��B�i���w�莞�̃f�t�H���g����ł��j
+※このプラグインを使用してゲームをリリースするのはお勧めしません。
 
 
-�Ȃ��C�g���g���y�ł��̃v���O�C���������N���Ă������N����܂���B
-���p�������ꍇ�͓���2��Z�ŏꍇ��������������K�v�͂Ȃ����Ǝv���܂��B
+●使い方
+
+k2utf8hack.dll がこのプラグイン本体です。
+拡張子tpmにリネームして吉里吉里２の起動前にリンクさせるか，
+startup.tjsなどでこのプラグインをリンクしてください。
+（その場合，リンク前のテキスト読み込みは従来通りの挙動になります）
+
+・Scripts.textEncoding プロパティが追加されますが，
+　吉里吉里Zと若干仕様が異なります：
+
+　Z: Scripts.{eval|exec}Storage の文字コードに影響を受ける
+　これ: 上記以外にも Array.load の文字コードも影響を受ける
+
+　※プロパティの値については 下記 -readencoding の指定と同様です。
+　　指定外の値を設定すると ANSI 相当の動作になります。
+　　吉里吉里Zでは範囲外の値で読み込むと未サポート例外が発生する仕様差に注意。
+
+・コマンドライン/cf/cfuの起動オプション -readencoding に対応します：
+（値が参照されるのはこのプラグインがリンクされた時のタイミングです）
+　UTF-8, Shift_JIS, ANSI, auto の指定に対応します。
+
+　Shift_JISは吉里吉里Zと違い，codepage 932 指定で文字コードを変換します。
+　ANSI は CP_ACP でOSの言語設定に依存した動作になります。これは吉里吉里Zの
+　　Shift_JIS を指定した時の動作と同じものになります。
+　Shift_JIS/ANSIの指定であってもBOMつきUTF8であれば読み込むことができます。
+　auto はこのプラグイン独自の機能で，UTF-8/Shift_JISを自動で判定して
+　　コード変換処理を行います。（未指定時のデフォルト動作です）
 
 
-���R���p�C��
-
-premake4�ɂăv���W�F�N�g�t�@�C�����쐬���ăR���p�C�����Ă��������B
-__fastcall�̎����Ɉˑ����邽�ߕK�� VisualC++ �ɂăR���p�C�����Ă��������B
-
-../tp_stub.* ����� ../00_simplebilder �t�H���_���̃t�@�C�����K�v�ł��B
+なお，吉里吉里Ｚでこのプラグインをリンクしても何も起こりません。
+併用したい場合は特に2とZで場合分け処理をする必要はないかと思います。
 
 
-���t�@�C���ɂ���
+●コンパイル
 
-readme.txt		���̃t�@�C��
-Main.cpp		�v���O�C�������N�^�g���g���Q�{�̃p�b�`����
-nmh.hpp			�����R�[�h���� https://github.com/shnya/nmh/ �̉�����
-premake4.lua		�v���W�F�N�g�����ppremake�t�@�C��
-v2link.cpp		simplebinder��v2link�����Łiexporter���K�v�Ȃ��߁j
+premake4にてプロジェクトファイルを作成してコンパイルしてください。
+__fastcallの実装に依存するため必ず VisualC++ にてコンパイルしてください。
 
-TextStream.cpp		tTVPTextReadStream�̉�������
-TextStreamHack.hpp	TextStream�̃R���p�C����ʂ����߂̃O���[�N���X�^�}�N����
-TextStreamHack.cpp	�����R�[�h�ϊ���
-
-data/startup.tjs	�e�X�g�X�N���v�g�i�v bin/k2utf8hack-d.dll�j
-data/test.bat		�e�X�g�X�N���v�g�N���p�o�b�`
-data/test_*.tjs		�e��G���R�[�h�ς݃X�N���v�g
+../tp_stub.* および ../00_simplebilder フォルダ内のファイルも必要です。
 
 
-�����̑����ӎ���
+●ファイルについて
 
-�E�u���삵�Ă���g���g���Q�{�̂Ƀp�b�`�����Ă�v�Ƃ�������̎d�l��C
-�@�E�B���X�΍�\�t�g�̃v���O�����ӂ�܂����m�@�\�Ȃǂ���F����
-�@��������̌x�����o���\��������܂��̂ł����ӂ��������B
-�@�i�{���Ɉ���������̂��ɂ��Ă͌���ł͖��m�F�ł��j
+readme.txt		このファイル
+Main.cpp		プラグインリンク／吉里吉里２本体パッチ処理
+nmh.hpp			文字コード判定 https://github.com/shnya/nmh/ の改造版
+premake4.lua		プロジェクト生成用premakeファイル
+v2link.cpp		simplebinderのv2link改造版（exporterが必要なため）
 
-�E�Ǝ��R���p�C�������g���g��2�ł͓��삵�Ȃ��\��������܂��B
+TextStream.cpp		tTVPTextReadStreamの改造実装
+TextStreamHack.hpp	TextStreamのコンパイルを通すためのグルークラス／マクロ等
+TextStreamHack.cpp	文字コード変換等
 
-�Eauto����ŉ��̂�EUC�G���R�[�h�ɂ��Ή����Ă��܂�������ۏ؂���܂���B
-
-
-�����C�Z���X
-
-���̃v���O�C���̃��C�Z���X�͋g���g���Q�^�g���g���y�ɏ������Ă��������B
-nmh.hpp �� https://github.com/shnya/nmh/ �̃p�u���b�N�h���C�������̃R�[�h����
-���p�E�����������̂ɂȂ��Ă��܂��B
+data/startup.tjs	テストスクリプト（要 bin/k2utf8hack-d.dll）
+data/test.bat		テストスクリプト起動用バッチ
+data/test_*.tjs		各種エンコード済みスクリプト
 
 
-���Z�p���
+●その他注意事項
 
-�ETVPCreateTextStreamForRead�Ƀt�b�N�����Ď��O�����ɍ����ւ��邽��
-�@function exporter �̃X�^�u�֐���disasm�R�[�h����A�h���X���Z�o
-�����̂��ߊ�{�I�ɕW�������[�X�g���g���Q�ł݂̂������삵�Ȃ�
+・「動作している吉里吉里２本体にパッチをあてる」という動作の仕様上，
+　ウィルス対策ソフトのプログラムふるまい検知機能などが誤認して
+　何かしらの警告を出す可能性もありますのでご注意ください。
+　（本当に引っかかるのかについては現状では未確認です）
 
-�E�W�������[�X�̋g���g��2�ɂ�����TVPCreateTextStreamForRead��
-�@BorlandC++���__fastcall�Ăяo���Ń��W�X�^�����n���ŃR���p�C������Ă���
+・独自コンパイルした吉里吉里2では動作しない可能性があります。
 
-�E���̃v���O�C���ł�VisualC++��__fastcall�ɒu��������Ή����s�����C
-�@BorlandC++��VisualC++�ł�__fastcall�̃��W�X�^�n���̎d�l���قȂ邽��
-�@���̕����̋z�����s���K�v������i������ eax->ecx�փR�s�[�j
+・auto判定で何故かEUCエンコードにも対応していますが動作保証されません。
 
-����̓I�ȏڍׂ� Main.cpp �� DirtyHook �N���X���Q��
+
+●ライセンス
+
+このプラグインのライセンスは吉里吉里２／吉里吉里Ｚに準拠してください。
+nmh.hpp は https://github.com/shnya/nmh/ のパブリックドメイン扱いのコードから
+引用・改造したものになっています。
+
+
+●技術情報
+
+・TVPCreateTextStreamForReadにフックを入れて自前処理に差し替えるため
+　function exporter のスタブ関数のdisasmコードからアドレスを算出
+＞このため基本的に標準リリース吉里吉里２でのみしか動作しない
+
+・標準リリースの吉里吉里2におけるTVPCreateTextStreamForReadは
+　BorlandC++基準の__fastcall呼び出しでレジスタ引数渡しでコンパイルされている
+
+・このプラグインではVisualC++の__fastcallに置き換える対応を行うが，
+　BorlandC++とVisualC++では__fastcallのレジスタ渡しの仕様が異なるため
+　その部分の吸収を行う必要がある（第一引数 eax->ecxへコピー）
+
+※具体的な詳細は Main.cpp の DirtyHook クラスを参照
 
