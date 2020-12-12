@@ -3,3 +3,6 @@
 	url = https://github.com/krkrz/zlib.git
 	ignore = dirty
 
+[submodule "external/tp_stubz"]
+	path = external/tp_stubz
+	url = ../tp_stubz
