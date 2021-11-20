@@ -1,7 +1,7 @@
 
 SOURCES += v2link.cpp Main.cpp TextStream.cpp TextStreamHack.cpp external/zlib/adler32.c external/zlib/compress.c external/zlib/crc32.c external/zlib/deflate.c external/zlib/gzclose.c external/zlib/gzlib.c external/zlib/gzread.c external/zlib/gzwrite.c external/zlib/infback.c external/zlib/inffast.c external/zlib/inflate.c external/zlib/inftrees.c external/zlib/trees.c external/zlib/uncompr.c external/zlib/zutil.c
 
-INCFLAGS += -I../00_simplebinder -Iexternal/zlib
+INCFLAGS += -Iexternal/00_simplebinder -Iexternal/zlib
 
 PROJECT_BASENAME = utf8hack
 

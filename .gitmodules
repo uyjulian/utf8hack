@@ -5,4 +5,7 @@
 
 [submodule "external/tp_stubz"]
 	path = external/tp_stubz
-	url = ../tp_stubz
+	url = https://github.com/uyjulian/tp_stubz.git
+[submodule "external/00_simplebinder"]
+	path = external/00_simplebinder
+	url = https://github.com/uyjulian/00_simplebinder.git
