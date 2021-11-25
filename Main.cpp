@@ -35,15 +35,15 @@ public:
 		if (modified) write(backup, HOOK_ASMLEN);
 	}
 	void hook(LPVOID jumpaddr) {
-		DWORD n = (DWORD)jumpaddr - (DWORD)target - HOOK_ASMLEN;
+		ULONG_PTR n = (ULONG_PTR)jumpaddr - (ULONG_PTR)target - HOOK_ASMLEN;
 		BYTE asmjump[HOOK_ASMLEN] = {
 			0x89, 0xc1,					// mov ecx,eax				[XXX] for borland to microsoft fastcall register convert
 //			0x89, 0xc8,					// mov eax,ecx				[XXX] for microsoft to borland fastcall register convert
 			0xe9,						// jmp rel32
-			(n    ) & 0xFF,
-			(n>>8 ) & 0xFF,
-			(n>>16) & 0xFF,
-			(n>>24) & 0xFF };
+			(BYTE)((n    ) & 0xFF),
+			(BYTE)((n>>8 ) & 0xFF),
+			(BYTE)((n>>16) & 0xFF),
+			(BYTE)((n>>24) & 0xFF) };
 		write(asmjump, HOOK_ASMLEN);
 		modified = true;
 	}
@@ -59,7 +59,7 @@ public:
 			 (((DWORD)relative[1])<<8 ) |
 			 (((DWORD)relative[2])<<16) |
 			 (((DWORD)relative[3])<<24));
-		DWORD address = ((DWORD)relative) + 4 + offset;
+		ULONG_PTR address = ((ULONG_PTR)relative) + 4 + offset;
 
 		// set dirty-hook (HOOK: only supports microsoft fastcall function address, max 2 args)
 		DirtyHook *ret = new DirtyHook((LPVOID)address);
