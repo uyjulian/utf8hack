@@ -44,6 +44,9 @@ class tTVPTextReadStream : public iTJSTextReadStream
 	size_t BufferLen;
 	tjs_char *BufferPtr;
 	tjs_int CryptMode;
+	tjs_uint64 ofs = 0;
+	UINT codepage = 0;
+	ttstr name;
 
 public:
 	tTVPTextReadStream(const ttstr  & name, const ttstr & modestr, UINT codepage)
@@ -51,6 +54,8 @@ public:
 		// following syntax of modestr is currently supported.
 		// oN: read from binary offset N (in bytes)
 
+		this->codepage = codepage;
+		this->name = name;
 #ifndef TVP_NO_CHECK_WIDE_CHAR_SIZE
 		if(sizeof(tjs_char)  != 2)
 			TVPThrowExceptionMessage(TJS_W("The host is not a 16-bit unicode system."));
@@ -63,8 +68,7 @@ public:
 
 		// check o mode
 		Stream = TVPCreateStream(name, TJS_BS_READ);
-
-		tjs_uint64 ofs = 0;
+		
 		const tjs_char * o_ofs;
 		o_ofs = TJS_strchr(modestr.c_str(), TJS_W('o'));
 		if(o_ofs != NULL)
@@ -85,90 +89,72 @@ public:
 		}
 
 		// check first of the file - whether the file is unicode
-		try
+		TVPDoTryBlock(_Try_Construct_Inner, _Catch_Construct_Inner, NULL, this);
+	}
+
+	static void TJS_USERENTRY _Try_Construct_Inner(void *data)
+	{
+		tTVPTextReadStream * arg = (tTVPTextReadStream *)data;
+		arg->tTVPTextReadStream_Construct();
+	}
+
+	static bool TJS_USERENTRY _Catch_Construct_Inner(void *data, const tTVPExceptionDesc & desc)
+	{
+		tTVPTextReadStream * arg = (tTVPTextReadStream *)data;
+		arg->tTVPTextReadStream_Construct_Catch();
+		throw desc;
+	}
+
+	void tTVPTextReadStream_Construct()
+	{
+		tjs_uint8 mark[2] = {0,0};
+		Stream->Read(mark, 2);
+		if(mark[0] == 0xff && mark[1] == 0xfe)
 		{
-			tjs_uint8 mark[2] = {0,0};
-			Stream->Read(mark, 2);
-			if(mark[0] == 0xff && mark[1] == 0xfe)
+			// unicode
+			DirectLoad = true;
+		}
+		else if(mark[0] == 0xfe && mark[1] == 0xfe)
+		{
+			// ciphered text or compressed
+			tjs_uint8 mode[1];
+			Stream->Read(mode, 1);
+			if(mode[0] != 0 && mode[0] != 1 && mode[0] != 2)
+				TVPThrowExceptionMessage(TVPUnsupportedCipherMode, name);
+				// currently only mode0 and mode1, and compressed (mode2) are supported
+			CryptMode = mode[0];
+			DirectLoad = CryptMode != 2;
+
+			Stream->Read(mark, 2); // original bom code comes here (is not compressed)
+			if(mark[0] != 0xff || mark[1] != 0xfe)
+				TVPThrowExceptionMessage(TVPUnsupportedCipherMode, name);
+
+
+			if(CryptMode == 2)
 			{
-				// unicode
-				DirectLoad = true;
-			}
-			else if(mark[0] == 0xfe && mark[1] == 0xfe)
-			{
-				// ciphered text or compressed
-				tjs_uint8 mode[1];
-				Stream->Read(mode, 1);
-				if(mode[0] != 0 && mode[0] != 1 && mode[0] != 2)
+				// compressed text stream
+				tjs_uint64 compressed = Stream->ReadI64LE();
+				tjs_uint64 uncompressed = Stream->ReadI64LE();
+				if(compressed != (unsigned long)compressed ||
+					uncompressed != (unsigned long)uncompressed)
 					TVPThrowExceptionMessage(TVPUnsupportedCipherMode, name);
-					// currently only mode0 and mode1, and compressed (mode2) are supported
-				CryptMode = mode[0];
-				DirectLoad = CryptMode != 2;
-
-				Stream->Read(mark, 2); // original bom code comes here (is not compressed)
-				if(mark[0] != 0xff || mark[1] != 0xfe)
-					TVPThrowExceptionMessage(TVPUnsupportedCipherMode, name);
-
-
-				if(CryptMode == 2)
-				{
-					// compressed text stream
-					tjs_uint64 compressed = Stream->ReadI64LE();
-					tjs_uint64 uncompressed = Stream->ReadI64LE();
-					if(compressed != (unsigned long)compressed ||
-						uncompressed != (unsigned long)uncompressed)
-						TVPThrowExceptionMessage(TVPUnsupportedCipherMode, name);
-							// too large stream
-					unsigned long destlen ;
-					tjs_uint8 *nbuf = new tjs_uint8[(unsigned long)compressed + 1];
-					try
-					{
-						Stream->ReadBuffer(nbuf, (unsigned long)compressed);
-						Buffer = new tjs_char [ (BufferLen = (destlen =
-								(unsigned long)uncompressed) / 2) + 1];
-						int result = uncompress( /* uncompress from zlib */
-							(unsigned char*)Buffer,
-							&destlen, (unsigned char*)nbuf,
-							(unsigned long)compressed);
-						if(result != Z_OK ||
-							destlen != (unsigned long)uncompressed)
-								TVPThrowExceptionMessage(TVPUnsupportedCipherMode, name);
-							// uncompression failed.
-					}
-					catch(...)
-					{
-						delete [] nbuf;
-						throw;
-					}
-					delete [] nbuf;
-					Buffer[BufferLen] = 0;
-					BufferPtr = Buffer;
-				}
-			}
-			else
-			{
-				// ansi/mbcs
-				// read whole and hold it
-				Stream->SetPosition(ofs);
-				tjs_uint size = (tjs_uint)(Stream->GetSize() - ofs);
-				tjs_uint8 *nbuf = new tjs_uint8[size + 1];
+						// too large stream
+				unsigned long destlen ;
+				tjs_uint8 *nbuf = new tjs_uint8[(unsigned long)compressed + 1];
 				try
 				{
-					const tjs_nchar *top = (const tjs_nchar*)nbuf;
-					Stream->ReadBuffer(nbuf, size);
-					nbuf[size] = 0; // terminater
-
-					// check UTF-8 BOM
-					if (size >= 3 && nbuf[0] == 0xef && nbuf[1] == 0xbb && nbuf[2] == 0xbf) {
-						size -= 3;
-						top += 3;
-						codepage = CP_UTF8;
-					}
-
-					BufferLen = CodepageTextToWideCharString(codepage, top, size, NULL, 0);
-					if(BufferLen == (size_t)-1) TVPThrowExceptionMessage(TJSNarrowToWideConversionError);
-					Buffer = new tjs_char [ BufferLen +1];
-					CodepageTextToWideCharString(codepage, top, size, Buffer, BufferLen);
+					Stream->ReadBuffer(nbuf, (unsigned long)compressed);
+					BufferLen = (destlen =
+							(unsigned long)uncompressed) / 2;
+					Buffer = new tjs_char [ (BufferLen) + 1];
+					int result = uncompress( /* uncompress from zlib */
+						(unsigned char*)Buffer,
+						&destlen, (unsigned char*)nbuf,
+						(unsigned long)compressed);
+					if(result != Z_OK ||
+						destlen != (unsigned long)uncompressed)
+							TVPThrowExceptionMessage(TVPUnsupportedCipherMode, name);
+						// uncompression failed.
 				}
 				catch(...)
 				{
@@ -180,13 +166,46 @@ public:
 				BufferPtr = Buffer;
 			}
 		}
-		catch(...)
+		else
 		{
-			delete Stream; Stream = NULL;
-			throw;
+			// ansi/mbcs
+			// read whole and hold it
+			Stream->SetPosition(ofs);
+			tjs_uint size = (tjs_uint)(Stream->GetSize() - ofs);
+			tjs_uint8 *nbuf = new tjs_uint8[size + 1];
+			try
+			{
+				const tjs_nchar *top = (const tjs_nchar*)nbuf;
+				Stream->ReadBuffer(nbuf, size);
+				nbuf[size] = 0; // terminater
+
+				// check UTF-8 BOM
+				if (size >= 3 && nbuf[0] == 0xef && nbuf[1] == 0xbb && nbuf[2] == 0xbf) {
+					size -= 3;
+					top += 3;
+					codepage = CP_UTF8;
+				}
+
+				BufferLen = CodepageTextToWideCharString(codepage, top, size, NULL, 0);
+				if(BufferLen == (size_t)-1) TVPThrowExceptionMessage(TJSNarrowToWideConversionError);
+				Buffer = new tjs_char [ BufferLen +1];
+				CodepageTextToWideCharString(codepage, top, size, Buffer, BufferLen);
+			}
+			catch(...)
+			{
+				delete [] nbuf;
+				throw;
+			}
+			delete [] nbuf;
+			Buffer[BufferLen] = 0;
+			BufferPtr = Buffer;
 		}
 	}
 
+	void tTVPTextReadStream_Construct_Catch()
+	{
+		delete Stream; Stream = NULL;
+	}
 
 	~tTVPTextReadStream()
 	{
